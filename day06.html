@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DAY 06 단어장</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif; background: #f4f6f9; color: #1a1a1a; min-height: 100vh; }
+  .header { background: linear-gradient(135deg, #4a6fa5 0%, #2c4870 100%); color: white; padding: 20px 16px 16px; position: sticky; top: 0; z-index: 10; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+  .header h1 { font-size: 22px; font-weight: 700; margin-bottom: 8px; }
+  .header .subtitle { font-size: 13px; opacity: 0.9; }
+  .controls { display: flex; gap: 8px; margin-top: 12px; }
+  .btn { flex: 1; padding: 10px; background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); color: white; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+  .btn:active { background: rgba(255,255,255,0.3); }
+  .btn.active { background: white; color: #2c4870; }
+  .progress { margin-top: 10px; font-size: 12px; opacity: 0.85; }
+  .list { padding: 12px; }
+  .card { background: white; border-radius: 12px; padding: 14px 16px; margin-bottom: 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); display: flex; align-items: center; cursor: pointer; transition: all 0.2s; user-select: none; -webkit-user-select: none; }
+  .card:active { transform: scale(0.98); background: #f9fafb; }
+  .card.checked { background: #f0f4f8; opacity: 0.7; }
+  .num { flex-shrink: 0; width: 32px; height: 32px; background: #4a6fa5; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; margin-right: 14px; }
+  .card.checked .num { background: #98a8b8; }
+  .content { flex: 1; min-width: 0; }
+  .word { font-size: 17px; font-weight: 700; color: #1a1a1a; margin-bottom: 3px; word-break: break-word; }
+  .meaning { font-size: 14px; color: #5a6b7c; line-height: 1.4; word-break: keep-all; transition: opacity 0.2s; }
+  .meaning.hidden { opacity: 0; }
+  .footer { text-align: center; padding: 30px 16px; color: #98a8b8; font-size: 12px; }
+  @media (min-width: 600px) { .list { max-width: 600px; margin: 0 auto; } }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>📘 DAY 06 단어장</h1>
+  <div class="subtitle">총 50단어 · 탭하면 체크 / 뜻 가리기 모드에서 탭하면 뜻 보기</div>
+  <div class="controls">
+    <button class="btn active" id="modeAll" onclick="setMode('all')">전체보기</button>
+    <button class="btn" id="modeHide" onclick="setMode('hide')">뜻 가리기</button>
+    <button class="btn" onclick="resetChecks()">체크 초기화</button>
+  </div>
+  <div class="progress" id="progress">학습률 0 / 50</div>
+</div>
+
+<div class="list" id="list"></div>
+<div class="footer">Essentia_II · DAY 06 · 50 words</div>
+
+<script>
+const words = [
+  ["rot", "v. 썩다, 부패하다"],
+  ["serve", "v. (음식을) 제공하다"],
+  ["starve", "v. 굶주리다"],
+  ["stove", "n. (가스·전기) 레인지, 난로"],
+  ["swallow", "v. 삼키다 / n. 제비"],
+  ["afford", "v. ~할 여유가 있다"],
+  ["broad", "a. 폭넓은"],
+  ["carry", "v. 나르다, 옮기다"],
+  ["carelessly", "ad. 부주의하게"],
+  ["cargo", "n. 화물"],
+  ["come to an end", "phr. 끝나다"],
+  ["clerk", "n. 직원, 점원"],
+  ["concern", "n. 걱정 / v. ~에 관계하다, ~를 걱정시키다"],
+  ["diagnosis", "n. 진단"],
+  ["differ", "v. 다르다, 의견을 달리하다"],
+  ["cloth", "n. 천, 옷감"],
+  ["efficient", "a. 능률적인, 효과적인"],
+  ["encouragement", "n. 격려"],
+  ["exotic", "a. 이국적인, 색다른"],
+  ["expand", "v. 넓히다, 확대하다"],
+  ["for the moment", "phr. 지금은, 이 순간은"],
+  ["forbid", "v. 금지하다"],
+  ["cost", "v. 비용이 들다 / n. 비용"],
+  ["habitat", "n. (동·식물의) 서식지"],
+  ["customer", "n. 고객"],
+  ["insult", "v. 모욕을 주다 / n. 모욕"],
+  ["interviewer", "n. 면접자, 인터뷰하는 사람"],
+  ["investigation", "n. 조사"],
+  ["display", "v. 전시하다, 진열하다 / n. 전시, 진열"],
+  ["liability", "n. 책임; (pl.) 부채, 채무"],
+  ["mastermind", "n. 입안자, 지도자, 주도자"],
+  ["equal", "a. 동등한, 같은 / v. 같다"],
+  ["out of the question", "phr. 생각할 수 없는, 불가능한"],
+  ["out of work", "phr. 실직 중인"],
+  ["jewelry", "n. 보석류"],
+  ["pioneer", "n. 개척자, 선구자"],
+  ["processing", "n. 처리, 가공"],
+  ["luxury", "n. 사치품; 사치, 호화로움"],
+  ["merchant", "n. 상인"],
+  ["retaliation", "n. 보복"],
+  ["pay", "v. 지불하다"],
+  ["robust", "a. 튼튼한, 강건한"],
+  ["seasonal", "a. 계절적인, 계절의"],
+  ["reasonable", "a. 합리적인"],
+  ["security", "n. 안전; 보증"],
+  ["shipment", "n. 선적물, 운송품"],
+  ["tolerance", "n. 관용, 관대; 내구력"],
+  ["receipt", "n. 영수증"],
+  ["volunteer", "n. 지원자 / v. 지원하다"],
+  ["souvenir", "n. 기념품"]
+];
+
+let mode = 'all';
+const checked = new Set();
+
+function render() {
+  const list = document.getElementById('list');
+  list.innerHTML = words.map((w, i) => `
+    <div class="card ${checked.has(i) ? 'checked' : ''}" data-idx="${i}">
+      <div class="num">${i + 1}</div>
+      <div class="content">
+        <div class="word">${w[0]}</div>
+        <div class="meaning ${mode === 'hide' && !checked.has(i) ? 'hidden' : ''}">${w[1]}</div>
+      </div>
+    </div>
+  `).join('');
+
+  document.querySelectorAll('.card').forEach(card => {
+    card.addEventListener('click', () => {
+      const idx = parseInt(card.dataset.idx);
+      if (mode === 'hide') {
+        card.querySelector('.meaning').classList.toggle('hidden');
+      } else {
+        if (checked.has(idx)) checked.delete(idx);
+        else checked.add(idx);
+        card.classList.toggle('checked');
+        updateProgress();
+      }
+    });
+  });
+  updateProgress();
+}
+
+function setMode(m) {
+  mode = m;
+  document.getElementById('modeAll').classList.toggle('active', m === 'all');
+  document.getElementById('modeHide').classList.toggle('active', m === 'hide');
+  render();
+}
+
+function resetChecks() { checked.clear(); render(); }
+function updateProgress() { document.getElementById('progress').textContent = `학습률 ${checked.size} / ${words.length}`; }
+
+render();
+</script>
+
+</body>
+</html>
