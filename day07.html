@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DAY 07 단어장</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif; background: #f4f6f9; color: #1a1a1a; min-height: 100vh; }
+  .header { background: linear-gradient(135deg, #4a6fa5 0%, #2c4870 100%); color: white; padding: 20px 16px 16px; position: sticky; top: 0; z-index: 10; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+  .header h1 { font-size: 22px; font-weight: 700; margin-bottom: 8px; }
+  .header .subtitle { font-size: 13px; opacity: 0.9; }
+  .controls { display: flex; gap: 8px; margin-top: 12px; }
+  .btn { flex: 1; padding: 10px; background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); color: white; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+  .btn:active { background: rgba(255,255,255,0.3); }
+  .btn.active { background: white; color: #2c4870; }
+  .progress { margin-top: 10px; font-size: 12px; opacity: 0.85; }
+  .list { padding: 12px; }
+  .card { background: white; border-radius: 12px; padding: 14px 16px; margin-bottom: 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); display: flex; align-items: center; cursor: pointer; transition: all 0.2s; user-select: none; -webkit-user-select: none; }
+  .card:active { transform: scale(0.98); background: #f9fafb; }
+  .card.checked { background: #f0f4f8; opacity: 0.7; }
+  .num { flex-shrink: 0; width: 32px; height: 32px; background: #4a6fa5; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; margin-right: 14px; }
+  .card.checked .num { background: #98a8b8; }
+  .content { flex: 1; min-width: 0; }
+  .word { font-size: 17px; font-weight: 700; color: #1a1a1a; margin-bottom: 3px; word-break: break-word; }
+  .meaning { font-size: 14px; color: #5a6b7c; line-height: 1.4; word-break: keep-all; transition: opacity 0.2s; }
+  .meaning.hidden { opacity: 0; }
+  .back-link { display: block; text-align: center; padding: 16px; color: #4a6fa5; text-decoration: none; font-size: 14px; }
+  .footer { text-align: center; padding: 10px 16px 30px; color: #98a8b8; font-size: 12px; }
+  @media (min-width: 600px) { .list { max-width: 600px; margin: 0 auto; } }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>📘 DAY 07 단어장</h1>
+  <div class="subtitle">총 50단어 · 탭하면 체크 / 뜻 가리기 모드에서 탭하면 뜻 보기</div>
+  <div class="controls">
+    <button class="btn active" id="modeAll" onclick="setMode('all')">전체보기</button>
+    <button class="btn" id="modeHide" onclick="setMode('hide')">뜻 가리기</button>
+    <button class="btn" onclick="resetChecks()">체크 초기화</button>
+  </div>
+  <div class="progress" id="progress">학습률 0 / 50</div>
+</div>
+
+<div class="list" id="list"></div>
+<a href="index.html" class="back-link">← 단어장 목록으로</a>
+<div class="footer">Essentia_II · DAY 07 · 50 words</div>
+
+<script>
+const words = [
+  ["advocate", "n. 옹호자; 변호사 / v. 주장하다"],
+  ["aggressively", "ad. 공격적으로, 적극적으로"],
+  ["stock", "n. 재고; 주식"],
+  ["appearance", "n. 외관, 외양; 출현"],
+  ["attach", "v. 붙이다, 접착하다"],
+  ["ban", "v. 금지하다 / n. 금지령"],
+  ["bankrupt", "a. 파산한 / n. 파산자"],
+  ["wrap", "v. 포장하다, 감싸다"],
+  ["agency", "n. 대행사, 대리점"],
+  ["aisle", "n. 통로, 복도"],
+  ["collection", "n. 수집물, 소장품"],
+  ["confident", "a. 자신 있는, 확신하는"],
+  ["crucial", "a. 치명적인, 결정적인"],
+  ["arrive", "v. 도착하다"],
+  ["demand", "n. 수요, 요구 / v. ~을 요구하다"],
+  ["demolish", "v. 파괴하다"],
+  ["detach", "v. 분리하다, 떼다"],
+  ["baggage", "n. 짐, 수하물"],
+  ["board", "v. (배·비행기에) 탑승하다"],
+  ["embassy", "n. 대사관"],
+  ["financial", "a. 재정의, 금융의"],
+  ["fine", "n. 벌금 / v. 벌금을 부과하다"],
+  ["finished", "a. 완성된, 끝마친"],
+  ["cancel", "v. 취소하다"],
+  ["departure", "n. 출발"],
+  ["industrial", "a. 산업의, 공업의"],
+  ["infamous", "a. 악명 높은"],
+  ["initiate", "v. (사업 등을) 시작하다, 착수하다"],
+  ["insane", "a. 이상한, 제정신이 아닌"],
+  ["distance", "n. 거리"],
+  ["lean", "v. 기대다; 의지하다"],
+  ["exchange", "v. 교환하다, 환전하다 / n. 교환"],
+  ["merge", "v. 합병하다, 병합하다"],
+  ["mess up", "phr. 어지럽히다, 혼란스럽게 하다"],
+  ["notice", "v. 알아채다, 눈치채다 / n. 통지"],
+  ["occur", "v. 발생하다"],
+  ["participation", "n. 참여, 참가"],
+  ["particularly", "ad. 특히"],
+  ["fee", "n. 요금"],
+  ["precaution", "n. 예방 조치, 예방책"],
+  ["quarterly", "ad. 한 해 네 번의, 분기별의"],
+  ["reduce", "v. 줄이다, 감소시키다"],
+  ["reference", "n. 추천; 참조"],
+  ["refine", "v. 정제하다, 개선하다"],
+  ["insurance", "n. 보험"],
+  ["standard", "n. 기준, 표준 / a. 표준의"],
+  ["stare", "v. 응시하다 / n. 응시, 쳐다보기"],
+  ["journey", "n. 여행"],
+  ["overseas", "ad. 외국으로 / a. 외국의 / n. 외국"],
+  ["take care of", "phr. ~을 처리하다"]
+];
+
+let mode = 'all';
+const checked = new Set();
+
+function render() {
+  const list = document.getElementById('list');
+  list.innerHTML = words.map((w, i) => `
+    <div class="card ${checked.has(i) ? 'checked' : ''}" data-idx="${i}">
+      <div class="num">${i + 1}</div>
+      <div class="content">
+        <div class="word">${w[0]}</div>
+        <div class="meaning ${mode === 'hide' && !checked.has(i) ? 'hidden' : ''}">${w[1]}</div>
+      </div>
+    </div>
+  `).join('');
+
+  document.querySelectorAll('.card').forEach(card => {
+    card.addEventListener('click', () => {
+      const idx = parseInt(card.dataset.idx);
+      if (mode === 'hide') {
+        card.querySelector('.meaning').classList.toggle('hidden');
+      } else {
+        if (checked.has(idx)) checked.delete(idx);
+        else checked.add(idx);
+        card.classList.toggle('checked');
+        updateProgress();
+      }
+    });
+  });
+  updateProgress();
+}
+
+function setMode(m) {
+  mode = m;
+  document.getElementById('modeAll').classList.toggle('active', m === 'all');
+  document.getElementById('modeHide').classList.toggle('active', m === 'hide');
+  render();
+}
+
+function resetChecks() { checked.clear(); render(); }
+function updateProgress() { document.getElementById('progress').textContent = `학습률 ${checked.size} / ${words.length}`; }
+
+render();
+</script>
+
+</body>
+</html>
