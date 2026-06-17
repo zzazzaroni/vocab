@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>R4 14회 단어장</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif; background: #f4f6f9; color: #1a1a1a; min-height: 100vh; }
+  .header { background: linear-gradient(135deg, #4a6fa5 0%, #2c4870 100%); color: white; padding: 20px 16px 16px; position: sticky; top: 0; z-index: 10; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+  .header h1 { font-size: 22px; font-weight: 700; margin-bottom: 8px; }
+  .header .subtitle { font-size: 13px; opacity: 0.9; }
+  .controls { display: flex; gap: 8px; margin-top: 12px; }
+  .btn { flex: 1; padding: 10px; background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); color: white; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+  .btn:active { background: rgba(255,255,255,0.3); }
+  .btn.active { background: white; color: #2c4870; }
+  .progress { margin-top: 10px; font-size: 12px; opacity: 0.85; }
+  .list { padding: 12px; }
+  .card { background: white; border-radius: 12px; padding: 14px 16px; margin-bottom: 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); display: flex; align-items: center; cursor: pointer; transition: all 0.2s; user-select: none; -webkit-user-select: none; }
+  .card:active { transform: scale(0.98); background: #f9fafb; }
+  .card.checked { background: #f0f4f8; opacity: 0.7; }
+  .num { flex-shrink: 0; width: 32px; height: 32px; background: #4a6fa5; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; margin-right: 14px; }
+  .card.checked .num { background: #98a8b8; }
+  .content { flex: 1; min-width: 0; }
+  .word { font-size: 17px; font-weight: 700; color: #1a1a1a; margin-bottom: 3px; word-break: break-word; }
+  .meaning { font-size: 14px; color: #5a6b7c; line-height: 1.4; word-break: keep-all; transition: opacity 0.2s; }
+  .meaning.hidden { opacity: 0; }
+  .back-link { display: block; text-align: center; padding: 16px; color: #4a6fa5; text-decoration: none; font-size: 14px; }
+  .footer { text-align: center; padding: 10px 16px 30px; color: #98a8b8; font-size: 12px; }
+  @media (min-width: 600px) { .list { max-width: 600px; margin: 0 auto; } }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>📘 R4 14회 단어장</h1>
+  <div class="subtitle">총 50단어 · 탭하면 체크 / 뜻 가리기 모드에서 탭하면 뜻 보기</div>
+  <div class="controls">
+    <button class="btn active" id="modeAll" onclick="setMode('all')">전체보기</button>
+    <button class="btn" id="modeHide" onclick="setMode('hide')">뜻 가리기</button>
+    <button class="btn" onclick="resetChecks()">체크 초기화</button>
+  </div>
+  <div class="progress" id="progress">학습률 0 / 50</div>
+</div>
+
+<div class="list" id="list"></div>
+<a href="index.html" class="back-link">← 단어장 목록으로</a>
+<div class="footer">R4 In Class 14회 · 50 words</div>
+
+<script>
+const words = [
+  ["capacity", "n. 수용력; 능력"],
+  ["indicate", "v. 나타내다, 보여 주다"],
+  ["surgical", "adj. 외과의"],
+  ["operation", "n. 수술"],
+  ["digestive", "adj. 소화의"],
+  ["appetite", "n. 식욕"],
+  ["stimulant", "n. 흥분제, 자극제"],
+  ["obese", "adj. 비만의"],
+  ["relieve", "v. 경감[완화]시키다"],
+  ["measurement", "n. 측정"],
+  ["solution", "n. 용액"],
+  ["dilute", "v. 희석하다"],
+  ["range from A to B", "(범위가) A에서 B까지 걸치다"],
+  ["perception", "n. 지각, 자각"],
+  ["gauge", "v. 측정하다"],
+  ["intensity", "n. 강도"],
+  ["neutralize", "v. 중화하다"],
+  ["drowsy", "adj. 졸리는"],
+  ["tempt", "v. 유혹하다"],
+  ["portion", "n. (음식의) 1인분"],
+  ["carbohydrates", "n. 탄수화물"],
+  ["trigger", "v. 촉발시키다"],
+  ["wind down", "긴장을 풀고 쉬다"],
+  ["slip into", "~에 빠지다"],
+  ["be correlated with", "~와 상관관계가 있다"],
+  ["affordable", "adj. 이용할 수 있는, 알맞은"],
+  ["deal with", "~에 대처하다, ~을 해결하다"],
+  ["nonprofit", "adj. 비영리의"],
+  ["assure", "v. 보장하다"],
+  ["estimate", "v. 추정하다"],
+  ["breathtaking", "adj. 깜짝 놀랄 만한"],
+  ["insurance", "n. 보험"],
+  ["profitability", "n. 수익성"],
+  ["manufacturer", "n. 제조업자"],
+  ["tap into", "~를 이용하다"],
+  ["machinery", "n. 기계"],
+  ["indication", "n. 조짐"],
+  ["overabundance", "n. 과잉, 과다"],
+  ["relieved", "adj. 안도하는"],
+  ["savvy", "adj. 사리에 밝은"],
+  ["prompt", "v. 촉진시키다"],
+  ["stumble", "v. 넘어지다"],
+  ["mumble", "v. 웅얼거리다"],
+  ["countless", "adj. 셀 수 없이 많은"],
+  ["accident", "n. 우연"],
+  ["biologist", "n. 생물학자"],
+  ["culture", "n. (세균 등의) 배양균"],
+  ["coincidence", "n. 우연의 일치"],
+  ["significance", "n. 중요성"],
+  ["medication", "n. 약"]
+];
+
+let mode = 'all';
+const checked = new Set();
+
+function render() {
+  const list = document.getElementById('list');
+  list.innerHTML = words.map((w, i) => `
+    <div class="card ${checked.has(i) ? 'checked' : ''}" data-idx="${i}">
+      <div class="num">${i + 1}</div>
+      <div class="content">
+        <div class="word">${w[0]}</div>
+        <div class="meaning ${mode === 'hide' && !checked.has(i) ? 'hidden' : ''}">${w[1]}</div>
+      </div>
+    </div>
+  `).join('');
+
+  document.querySelectorAll('.card').forEach(card => {
+    card.addEventListener('click', () => {
+      const idx = parseInt(card.dataset.idx);
+      if (mode === 'hide') {
+        card.querySelector('.meaning').classList.toggle('hidden');
+      } else {
+        if (checked.has(idx)) checked.delete(idx);
+        else checked.add(idx);
+        card.classList.toggle('checked');
+        updateProgress();
+      }
+    });
+  });
+  updateProgress();
+}
+
+function setMode(m) {
+  mode = m;
+  document.getElementById('modeAll').classList.toggle('active', m === 'all');
+  document.getElementById('modeHide').classList.toggle('active', m === 'hide');
+  render();
+}
+
+function resetChecks() { checked.clear(); render(); }
+function updateProgress() { document.getElementById('progress').textContent = `학습률 ${checked.size} / ${words.length}`; }
+
+render();
+</script>
+
+</body>
+</html>
