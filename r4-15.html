@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>R4 15회 단어장</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif; background: #f4f6f9; color: #1a1a1a; min-height: 100vh; }
+  .header { background: linear-gradient(135deg, #4a6fa5 0%, #2c4870 100%); color: white; padding: 20px 16px 16px; position: sticky; top: 0; z-index: 10; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+  .header h1 { font-size: 22px; font-weight: 700; margin-bottom: 8px; }
+  .header .subtitle { font-size: 13px; opacity: 0.9; }
+  .controls { display: flex; gap: 8px; margin-top: 12px; }
+  .btn { flex: 1; padding: 10px; background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); color: white; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+  .btn:active { background: rgba(255,255,255,0.3); }
+  .btn.active { background: white; color: #2c4870; }
+  .progress { margin-top: 10px; font-size: 12px; opacity: 0.85; }
+  .list { padding: 12px; }
+  .card { background: white; border-radius: 12px; padding: 14px 16px; margin-bottom: 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); display: flex; align-items: center; cursor: pointer; transition: all 0.2s; user-select: none; -webkit-user-select: none; }
+  .card:active { transform: scale(0.98); background: #f9fafb; }
+  .card.checked { background: #f0f4f8; opacity: 0.7; }
+  .num { flex-shrink: 0; width: 32px; height: 32px; background: #4a6fa5; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; margin-right: 14px; }
+  .card.checked .num { background: #98a8b8; }
+  .content { flex: 1; min-width: 0; }
+  .word { font-size: 17px; font-weight: 700; color: #1a1a1a; margin-bottom: 3px; word-break: break-word; }
+  .meaning { font-size: 14px; color: #5a6b7c; line-height: 1.4; word-break: keep-all; transition: opacity 0.2s; }
+  .meaning.hidden { opacity: 0; }
+  .back-link { display: block; text-align: center; padding: 16px; color: #4a6fa5; text-decoration: none; font-size: 14px; }
+  .footer { text-align: center; padding: 10px 16px 30px; color: #98a8b8; font-size: 12px; }
+  @media (min-width: 600px) { .list { max-width: 600px; margin: 0 auto; } }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>📘 R4 15회 단어장</h1>
+  <div class="subtitle">총 50단어 · 탭하면 체크 / 뜻 가리기 모드에서 탭하면 뜻 보기</div>
+  <div class="controls">
+    <button class="btn active" id="modeAll" onclick="setMode('all')">전체보기</button>
+    <button class="btn" id="modeHide" onclick="setMode('hide')">뜻 가리기</button>
+    <button class="btn" onclick="resetChecks()">체크 초기화</button>
+  </div>
+  <div class="progress" id="progress">학습률 0 / 50</div>
+</div>
+
+<div class="list" id="list"></div>
+<a href="index.html" class="back-link">← 단어장 목록으로</a>
+<div class="footer">R4 In Class 15회 · 50 words</div>
+
+<script>
+const words = [
+  ["occurrence", "n. 발생; 사건, 생긴 일"],
+  ["invade", "v. 침략하다"],
+  ["witness", "v. 목격하다"],
+  ["interval", "n. 간격"],
+  ["remind A of B", "A에게 B를 생각나게 하다"],
+  ["evade", "v. 피하다"],
+  ["get along with", "~와 잘 지내다"],
+  ["receptor", "n. 수용기, 감각기"],
+  ["taste bud", "미뢰"],
+  ["border", "v. (국경·경계를) 접하다"],
+  ["captivate", "v. ~의 마음을 사로잡다[매혹하다]"],
+  ["furrow", "n. 고랑, 골"],
+  ["inhabit", "v. 살다, 서식하다"],
+  ["herd", "n. 무리, 집단"],
+  ["reside", "v. 살다, 거주하다"],
+  ["abundant", "adj. 풍부한"],
+  ["occasionally", "adv. 때때로, 가끔"],
+  ["subsequently", "adv. 그 후에"],
+  ["undertake", "v. 착수하다"],
+  ["plentiful", "adj. 풍부한"],
+  ["predation", "n. 포식"],
+  ["for the sake of", "~을 위해서"],
+  ["supplement", "v. 보충하다"],
+  ["confrontation", "n. 대립, 대치"],
+  ["as a means of", "~의 수단으로서"],
+  ["in accordance with", "~을 따라서"],
+  ["instinctual", "adj. 본능적인"],
+  ["territorial", "adj. 영토의, 영역의"],
+  ["dominance", "n. 우세, 지배"],
+  ["sardine", "n. 정어리"],
+  ["swarm", "n. 무리, 떼"],
+  ["colony", "n. (개미, 벌 등의) 군집"],
+  ["democratic", "adj. 민주적인"],
+  ["hive", "n. 벌집"],
+  ["civilized", "adj. 문명화된"],
+  ["congress", "n. 의회"],
+  ["settle", "v. 해결하다"],
+  ["paradoxically", "adv. 역설적이게도"],
+  ["perceive", "v. 인식하다"],
+  ["unconscious", "adj. 무의식의"],
+  ["put out", "내걸다, 내놓다"],
+  ["to one's surprise", "놀랍게도"],
+  ["complement", "n. 보완재"],
+  ["substitute", "n. 대체재"],
+  ["intentionally", "adv. 의도적으로"],
+  ["conceptually", "adv. 개념적으로"],
+  ["rewarding", "adj. 보상해주는"],
+  ["instinctive", "adj. 본능적인"],
+  ["intangible", "adj. 만질 수 없는"],
+  ["enzyme", "n. 효소"]
+];
+
+let mode = 'all';
+const checked = new Set();
+
+function render() {
+  const list = document.getElementById('list');
+  list.innerHTML = words.map((w, i) => `
+    <div class="card ${checked.has(i) ? 'checked' : ''}" data-idx="${i}">
+      <div class="num">${i + 1}</div>
+      <div class="content">
+        <div class="word">${w[0]}</div>
+        <div class="meaning ${mode === 'hide' && !checked.has(i) ? 'hidden' : ''}">${w[1]}</div>
+      </div>
+    </div>
+  `).join('');
+
+  document.querySelectorAll('.card').forEach(card => {
+    card.addEventListener('click', () => {
+      const idx = parseInt(card.dataset.idx);
+      if (mode === 'hide') {
+        card.querySelector('.meaning').classList.toggle('hidden');
+      } else {
+        if (checked.has(idx)) checked.delete(idx);
+        else checked.add(idx);
+        card.classList.toggle('checked');
+        updateProgress();
+      }
+    });
+  });
+  updateProgress();
+}
+
+function setMode(m) {
+  mode = m;
+  document.getElementById('modeAll').classList.toggle('active', m === 'all');
+  document.getElementById('modeHide').classList.toggle('active', m === 'hide');
+  render();
+}
+
+function resetChecks() { checked.clear(); render(); }
+function updateProgress() { document.getElementById('progress').textContent = `학습률 ${checked.size} / ${words.length}`; }
+
+render();
+</script>
+
+</body>
+</html>
