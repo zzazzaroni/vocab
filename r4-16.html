@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>R4 16회 단어장</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif; background: #f4f6f9; color: #1a1a1a; min-height: 100vh; }
+  .header { background: linear-gradient(135deg, #4a6fa5 0%, #2c4870 100%); color: white; padding: 20px 16px 16px; position: sticky; top: 0; z-index: 10; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+  .header h1 { font-size: 22px; font-weight: 700; margin-bottom: 8px; }
+  .header .subtitle { font-size: 13px; opacity: 0.9; }
+  .controls { display: flex; gap: 8px; margin-top: 12px; }
+  .btn { flex: 1; padding: 10px; background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); color: white; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+  .btn:active { background: rgba(255,255,255,0.3); }
+  .btn.active { background: white; color: #2c4870; }
+  .progress { margin-top: 10px; font-size: 12px; opacity: 0.85; }
+  .list { padding: 12px; }
+  .card { background: white; border-radius: 12px; padding: 14px 16px; margin-bottom: 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); display: flex; align-items: center; cursor: pointer; transition: all 0.2s; user-select: none; -webkit-user-select: none; }
+  .card:active { transform: scale(0.98); background: #f9fafb; }
+  .card.checked { background: #f0f4f8; opacity: 0.7; }
+  .num { flex-shrink: 0; width: 32px; height: 32px; background: #4a6fa5; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; margin-right: 14px; }
+  .card.checked .num { background: #98a8b8; }
+  .content { flex: 1; min-width: 0; }
+  .word { font-size: 17px; font-weight: 700; color: #1a1a1a; margin-bottom: 3px; word-break: break-word; }
+  .meaning { font-size: 14px; color: #5a6b7c; line-height: 1.4; word-break: keep-all; transition: opacity 0.2s; }
+  .meaning.hidden { opacity: 0; }
+  .back-link { display: block; text-align: center; padding: 16px; color: #4a6fa5; text-decoration: none; font-size: 14px; }
+  .footer { text-align: center; padding: 10px 16px 30px; color: #98a8b8; font-size: 12px; }
+  @media (min-width: 600px) { .list { max-width: 600px; margin: 0 auto; } }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>📘 R4 16회 단어장</h1>
+  <div class="subtitle">총 50단어 · 탭하면 체크 / 뜻 가리기 모드에서 탭하면 뜻 보기</div>
+  <div class="controls">
+    <button class="btn active" id="modeAll" onclick="setMode('all')">전체보기</button>
+    <button class="btn" id="modeHide" onclick="setMode('hide')">뜻 가리기</button>
+    <button class="btn" onclick="resetChecks()">체크 초기화</button>
+  </div>
+  <div class="progress" id="progress">학습률 0 / 50</div>
+</div>
+
+<div class="list" id="list"></div>
+<a href="index.html" class="back-link">← 단어장 목록으로</a>
+<div class="footer">R4 In Class 16회 · 50 words</div>
+
+<script>
+const words = [
+  ["have ... in common", "~을 공통으로 지니다"],
+  ["infinity", "n. 무한성"],
+  ["symbolize", "v. 상징하다"],
+  ["embrace", "v. (생각 등을) 수용하다"],
+  ["discourage", "v. 의욕을 꺾다, 좌절시키다"],
+  ["involved in", "~에 관여하는, 관련된"],
+  ["go through", "~을 겪다"],
+  ["generational", "adj. 세대의, 세대 간의"],
+  ["entertain", "v. 즐겁게 해 주다"],
+  ["auction", "n. 경매"],
+  ["renowned", "adj. 유명한, 명성 있는"],
+  ["go viral", "입소문이 나다, 퍼져나가다"],
+  ["thoughtful", "adj. 사려 깊은"],
+  ["superficial", "adj. 피상적인"],
+  ["commentary", "n. 비판, 논의"],
+  ["confront", "v. (문제나 곤란한 상황에) 맞서다"],
+  ["financial", "adj. 금융[재정]의"],
+  ["attendee", "n. 참석자"],
+  ["unexpectedly", "adv. 예기치 않게"],
+  ["offend", "v. 기분 상하게 하다"],
+  ["intriguing", "adj. 아주 흥미로운"],
+  ["provoke", "v. (특정한 반응을) 유발하다"],
+  ["dramatically", "adv. 극적으로"],
+  ["resource", "n. 자원, 재원"],
+  ["at first glance", "언뜻 보기에는"],
+  ["surround", "v. 둘러싸다, 에워싸다"],
+  ["profoundly", "adv. 극심하게, 완전히"],
+  ["deliberately", "adv. 고의로, 의도적으로"],
+  ["overwhelming", "adj. 압도적인"],
+  ["regardless of", "~와 상관없이"],
+  ["desertification", "n. 사막화"],
+  ["vegetation", "n. 초목"],
+  ["drought", "n. 가뭄"],
+  ["sporadic", "adj. 산발적인(여러 곳에 흩어져 일어나는)"],
+  ["refugee", "n. 난민"],
+  ["objective", "adj. 객관적인"],
+  ["statistician", "n. 통계학자"],
+  ["inevitably", "adv. 필연적으로"],
+  ["relatively", "adv. 상대적으로"],
+  ["comparison", "n. 비교"],
+  ["attribute", "n. 특성"],
+  ["acquire", "v. 습득하다, 얻다"],
+  ["in spurts", "여러 번에 걸쳐 힘껏"],
+  ["intuition", "n. 직관"],
+  ["productive", "adj. 생산적인"],
+  ["sore spot", "예민한 부분"],
+  ["glance", "v. 흘긋 보다"],
+  ["slam", "v. 쾅 닫다"],
+  ["spruce", "n. 전나무"],
+  ["accumulate", "v. 쌓이다"]
+];
+
+let mode = 'all';
+const checked = new Set();
+
+function render() {
+  const list = document.getElementById('list');
+  list.innerHTML = words.map((w, i) => `
+    <div class="card ${checked.has(i) ? 'checked' : ''}" data-idx="${i}">
+      <div class="num">${i + 1}</div>
+      <div class="content">
+        <div class="word">${w[0]}</div>
+        <div class="meaning ${mode === 'hide' && !checked.has(i) ? 'hidden' : ''}">${w[1]}</div>
+      </div>
+    </div>
+  `).join('');
+
+  document.querySelectorAll('.card').forEach(card => {
+    card.addEventListener('click', () => {
+      const idx = parseInt(card.dataset.idx);
+      if (mode === 'hide') {
+        card.querySelector('.meaning').classList.toggle('hidden');
+      } else {
+        if (checked.has(idx)) checked.delete(idx);
+        else checked.add(idx);
+        card.classList.toggle('checked');
+        updateProgress();
+      }
+    });
+  });
+  updateProgress();
+}
+
+function setMode(m) {
+  mode = m;
+  document.getElementById('modeAll').classList.toggle('active', m === 'all');
+  document.getElementById('modeHide').classList.toggle('active', m === 'hide');
+  render();
+}
+
+function resetChecks() { checked.clear(); render(); }
+function updateProgress() { document.getElementById('progress').textContent = `학습률 ${checked.size} / ${words.length}`; }
+
+render();
+</script>
+
+</body>
+</html>
