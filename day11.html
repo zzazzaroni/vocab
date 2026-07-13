@@ -122,13 +122,19 @@ function render() {
     card.addEventListener('click', () => {
       const idx = parseInt(card.dataset.idx);
       const set = curSet();
+      const meaningEl = card.querySelector('.meaning');
       if (mode === 'hide') {
-        card.querySelector('.meaning').classList.remove('hidden');
+        // 토글: 안 본 카드면 뜻 보임+체크(+1), 이미 본 카드면 뜻 숨김+체크해제(-1)
         if (!set.has(idx)) {
           set.add(idx);
+          meaningEl.classList.remove('hidden');
           card.classList.add('checked');
-          updateProgress();
+        } else {
+          set.delete(idx);
+          meaningEl.classList.add('hidden');
+          card.classList.remove('checked');
         }
+        updateProgress();
       } else {
         if (set.has(idx)) set.delete(idx);
         else set.add(idx);

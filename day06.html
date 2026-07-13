@@ -100,16 +100,18 @@ const words = [
 ];
 
 let mode = 'all';
-const checked = new Set();
+const checkedAll = new Set();   // 전체보기 모드 학습률
+const checkedHide = new Set();  // 뜻 가리기 모드 학습률
+function curSet() { return mode === 'hide' ? checkedHide : checkedAll; }
 
 function render() {
   const list = document.getElementById('list');
   list.innerHTML = words.map((w, i) => `
-    <div class="card ${checked.has(i) ? 'checked' : ''}" data-idx="${i}">
+    <div class="card ${curSet().has(i) ? 'checked' : ''}" data-idx="${i}">
       <div class="num">${i + 1}</div>
       <div class="content">
         <div class="word">${w[0]}</div>
-        <div class="meaning ${mode === 'hide' && !checked.has(i) ? 'hidden' : ''}">${w[1]}</div>
+        <div class="meaning ${mode === 'hide' && !curSet().has(i) ? 'hidden' : ''}">${w[1]}</div>
       </div>
     </div>
   `).join('');
@@ -117,11 +119,23 @@ function render() {
   document.querySelectorAll('.card').forEach(card => {
     card.addEventListener('click', () => {
       const idx = parseInt(card.dataset.idx);
+      const set = curSet();
+      const meaningEl = card.querySelector('.meaning');
       if (mode === 'hide') {
-        card.querySelector('.meaning').classList.toggle('hidden');
+        // 토글: 안 본 카드면 뜻 보임+체크(+1), 이미 본 카드면 뜻 숨김+체크해제(-1)
+        if (!set.has(idx)) {
+          set.add(idx);
+          meaningEl.classList.remove('hidden');
+          card.classList.add('checked');
+        } else {
+          set.delete(idx);
+          meaningEl.classList.add('hidden');
+          card.classList.remove('checked');
+        }
+        updateProgress();
       } else {
-        if (checked.has(idx)) checked.delete(idx);
-        else checked.add(idx);
+        if (set.has(idx)) set.delete(idx);
+        else set.add(idx);
         card.classList.toggle('checked');
         updateProgress();
       }
@@ -137,8 +151,11 @@ function setMode(m) {
   render();
 }
 
-function resetChecks() { checked.clear(); render(); }
-function updateProgress() { document.getElementById('progress').textContent = `학습률 ${checked.size} / ${words.length}`; }
+function resetChecks() { curSet().clear(); render(); }
+function updateProgress() {
+  const label = mode === 'hide' ? '뜻 가리기 학습률' : '전체보기 학습률';
+  document.getElementById('progress').textContent = `${label} ${curSet().size} / ${words.length}`;
+}
 
 render();
 </script>
