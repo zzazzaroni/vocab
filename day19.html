@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DAY 19 단어장</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif; background: #f4f6f9; color: #1a1a1a; min-height: 100vh; }
+  .header { background: linear-gradient(135deg, #4a6fa5 0%, #2c4870 100%); color: white; padding: 20px 16px 16px; position: sticky; top: 0; z-index: 10; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+  .header h1 { font-size: 22px; font-weight: 700; margin-bottom: 8px; }
+  .header .subtitle { font-size: 13px; opacity: 0.9; }
+  .controls { display: flex; gap: 8px; margin-top: 12px; }
+  .btn { flex: 1; padding: 10px; background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); color: white; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+  .btn:active { background: rgba(255,255,255,0.3); }
+  .btn.active { background: white; color: #2c4870; }
+  .progress { margin-top: 10px; font-size: 12px; opacity: 0.85; }
+  .list { padding: 12px; }
+  .card { background: white; border-radius: 12px; padding: 14px 16px; margin-bottom: 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); display: flex; align-items: center; cursor: pointer; transition: all 0.2s; user-select: none; -webkit-user-select: none; }
+  .card:active { transform: scale(0.98); background: #f9fafb; }
+  .card.checked { background: #f0f4f8; opacity: 0.7; }
+  .num { flex-shrink: 0; width: 32px; height: 32px; background: #4a6fa5; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; margin-right: 14px; }
+  .card.checked .num { background: #98a8b8; }
+  .content { flex: 1; min-width: 0; }
+  .word { font-size: 17px; font-weight: 700; color: #1a1a1a; margin-bottom: 3px; word-break: break-word; }
+  .meaning { font-size: 14px; color: #5a6b7c; line-height: 1.4; word-break: keep-all; transition: opacity 0.2s; }
+  .meaning.hidden { opacity: 0; }
+  .back-link { display: block; text-align: center; padding: 16px; color: #4a6fa5; text-decoration: none; font-size: 14px; }
+  .footer { text-align: center; padding: 10px 16px 30px; color: #98a8b8; font-size: 12px; }
+  @media (min-width: 600px) { .list { max-width: 600px; margin: 0 auto; } }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>📘 DAY 19 단어장</h1>
+  <div class="subtitle">총 50단어 · 탭하면 체크 / 뜻 가리기 모드에서 탭하면 뜻 보기</div>
+  <div class="controls">
+    <button class="btn active" id="modeAll" onclick="setMode('all')">전체보기</button>
+    <button class="btn" id="modeHide" onclick="setMode('hide')">뜻 가리기</button>
+    <button class="btn" onclick="resetChecks()">체크 초기화</button>
+  </div>
+  <div class="progress" id="progress">전체보기 학습률 0 / 50</div>
+</div>
+
+<div class="list" id="list"></div>
+<a href="index.html" class="back-link">← 단어장 목록으로</a>
+<div class="footer">Essentia_II · DAY 19 · 50 words</div>
+
+<script>
+const words = [
+  ["pour", "v. (액체를) 붓다, (비가) 퍼붓다"],
+  ["atmosphere", "n. 분위기, 환경"],
+  ["attract", "v. 끌다, 유인하다"],
+  ["authorize", "v. 권한을 주다, ~을 허가하다"],
+  ["aware", "a. 인식하고 있는, 알고 있는"],
+  ["budget", "n. 예산 / v. 예산을 짜다"],
+  ["bulk", "n. 부피 / a. 대량의"],
+  ["claim", "n. 주장, 요구 / v. 주장하다, 요구하다"],
+  ["clarify", "v. 분명[명료]하게 하다"],
+  ["classify", "v. 분류하다"],
+  ["predict", "v. 예측하다"],
+  ["severe", "a. 심한, 혹독한"],
+  ["shift", "v. 옮기다, 바꾸다"],
+  ["temperature", "n. 온도"],
+  ["vary", "v. 다르다"],
+  ["divide", "v. 나누다, 분할하다"],
+  ["multiple", "a. 복합적인, 다양한"],
+  ["evidently", "ad. 분명하게, 명백하게"],
+  ["multiply", "v. 곱하다, 증가하다"],
+  ["examine", "v. 조사하다"],
+  ["exceed", "v. 넘다, 초과하다"],
+  ["none", "pron. 하나도 ~없다, 아무도 ~않다"],
+  ["fill", "v. ~을 채우다"],
+  ["plenty", "n. 많음"],
+  ["quantity", "n. 양, 수량"],
+  ["quarter", "n. 4분의 1"],
+  ["rate", "n. 비율, 속도"],
+  ["several", "a. 몇몇의"],
+  ["involved", "a. 관계된, 연루된"],
+  ["lay emphasis on", "phr. ~에 중점을 두다"],
+  ["sum", "n. 합계, 금액"],
+  ["migration", "n. 이동, 이주"],
+  ["negotiate", "v. 협상하다"],
+  ["officially", "ad. 공식적으로"],
+  ["owe", "v. 빚지고 있다"],
+  ["physician", "n. 내과 의사"],
+  ["volume", "n. 부피, 양; 음량; (책의) 권"],
+  ["afterward", "ad. 나중에, 이후에"],
+  ["professional", "a. 직업의, 전문적인 / n. 전문가"],
+  ["constant", "a. 일정한, 불변의"],
+  ["raise", "v. 올리다; 제기하다 / n. 임금 인상"],
+  ["everlasting", "a. 영원한"],
+  ["register", "v. 등록하다 / n. 등부"],
+  ["frequent", "a. 자주 있는"],
+  ["separately", "ad. 개별적으로, 따로따로"],
+  ["general", "a. 일반적인"],
+  ["hardly", "ad. 거의 ~없다, 거의 ~아니다"],
+  ["instant", "a. 즉석의"],
+  ["last", "a. 마지막의 / v. 지속되다"],
+  ["nowadays", "ad. 요즘에, 오늘날에는"]
+];
+
+let mode = 'all';
+const checkedAll = new Set();   // 전체보기 모드 학습률
+const checkedHide = new Set();  // 뜻 가리기 모드 학습률
+function curSet() { return mode === 'hide' ? checkedHide : checkedAll; }
+
+function render() {
+  const list = document.getElementById('list');
+  list.innerHTML = words.map((w, i) => `
+    <div class="card ${curSet().has(i) ? 'checked' : ''}" data-idx="${i}">
+      <div class="num">${i + 1}</div>
+      <div class="content">
+        <div class="word">${w[0]}</div>
+        <div class="meaning ${mode === 'hide' && !curSet().has(i) ? 'hidden' : ''}">${w[1]}</div>
+      </div>
+    </div>
+  `).join('');
+
+  document.querySelectorAll('.card').forEach(card => {
+    card.addEventListener('click', () => {
+      const idx = parseInt(card.dataset.idx);
+      const set = curSet();
+      const meaningEl = card.querySelector('.meaning');
+      if (mode === 'hide') {
+        // 토글: 안 본 카드면 뜻 보임+체크(+1), 이미 본 카드면 뜻 숨김+체크해제(-1)
+        if (!set.has(idx)) {
+          set.add(idx);
+          meaningEl.classList.remove('hidden');
+          card.classList.add('checked');
+        } else {
+          set.delete(idx);
+          meaningEl.classList.add('hidden');
+          card.classList.remove('checked');
+        }
+        updateProgress();
+      } else {
+        if (set.has(idx)) set.delete(idx);
+        else set.add(idx);
+        card.classList.toggle('checked');
+        updateProgress();
+      }
+    });
+  });
+  updateProgress();
+}
+
+function setMode(m) {
+  mode = m;
+  document.getElementById('modeAll').classList.toggle('active', m === 'all');
+  document.getElementById('modeHide').classList.toggle('active', m === 'hide');
+  render();
+}
+
+function resetChecks() { curSet().clear(); render(); }
+function updateProgress() {
+  const label = mode === 'hide' ? '뜻 가리기 학습률' : '전체보기 학습률';
+  document.getElementById('progress').textContent = `${label} ${curSet().size} / ${words.length}`;
+}
+
+render();
+</script>
+
+</body>
+</html>
