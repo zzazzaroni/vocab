@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DAY 23 단어장</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif; background: #f4f6f9; color: #1a1a1a; min-height: 100vh; }
+.header { background: linear-gradient(135deg, #4a6fa5 0%, #2c4870 100%); color: white; padding: 20px 16px 16px; position: sticky; top: 0; z-index: 10; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+.header h1 { font-size: 22px; font-weight: 700; margin-bottom: 8px; }
+.header .subtitle { font-size: 13px; opacity: 0.9; }
+.controls { display: flex; gap: 8px; margin-top: 12px; }
+.btn { flex: 1; padding: 10px; background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); color: white; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+.btn:active { background: rgba(255,255,255,0.3); }
+.btn.active { background: white; color: #2c4870; }
+.progress { margin-top: 10px; font-size: 12px; opacity: 0.85; }
+.list { padding: 12px; }
+.card { background: white; border-radius: 12px; padding: 14px 16px; margin-bottom: 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); display: flex; align-items: center; cursor: pointer; transition: all 0.2s; user-select: none; -webkit-user-select: none; }
+.card:active { transform: scale(0.98); background: #f9fafb; }
+.card.checked { background: #f0f4f8; opacity: 0.7; }
+.num { flex-shrink: 0; width: 32px; height: 32px; background: #4a6fa5; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; margin-right: 14px; }
+.card.checked .num { background: #98a8b8; }
+.content { flex: 1; min-width: 0; }
+.word { font-size: 17px; font-weight: 700; color: #1a1a1a; margin-bottom: 3px; word-break: break-word; }
+.meaning { font-size: 14px; color: #5a6b7c; line-height: 1.4; word-break: keep-all; transition: opacity 0.2s; }
+.meaning.hidden { opacity: 0; }
+.back-link { display: block; text-align: center; padding: 16px; color: #4a6fa5; text-decoration: none; font-size: 14px; }
+.footer { text-align: center; padding: 10px 16px 30px; color: #98a8b8; font-size: 12px; }
+@media (min-width: 600px) { .list { max-width: 600px; margin: 0 auto; } }
+</style>
+</head>
+<body>
+<div class="header">
+<h1>📘 DAY 23 단어장</h1>
+<div class="subtitle">총 50단어 · 탭하면 체크 / 뜻 가리기 모드에서 탭하면 뜻 보기</div>
+<div class="controls">
+<button class="btn active" id="modeAll" onclick="setMode('all')">전체보기</button>
+<button class="btn" id="modeHide" onclick="setMode('hide')">뜻 가리기</button>
+<button class="btn" onclick="resetChecks()">체크 초기화</button>
+</div>
+<div class="progress" id="progress">전체보기 학습률 0 / 50</div>
+</div>
+<div class="list" id="list"></div>
+<a href="index.html" class="back-link">← 단어장 목록으로</a>
+<div class="footer">Essentia_II · DAY 23 · 50 words</div>
+<script>
+const words = [
+["ahead", "ad. 미리, 앞서서"],
+["analysis", "n. 분석"],
+["antibiotic", "n. 항생제"],
+["applicant", "n. 지원자, 신청자"],
+["boring", "a. 지루한"],
+["be subject to", "phr. ~에 영향을 받기 쉽다"],
+["be supposed to", "phr. ~하기로 되어 있다"],
+["cozy", "a. 아늑한, 안락한"],
+["courage", "n. 용기"],
+["curious", "a. 호기심이 강한"],
+["diligent", "a. 부지런한, 근면한"],
+["creative", "a. 창조적인, 독창적인"],
+["fierce", "a. 사나운"],
+["degree", "n. 학위"],
+["delay", "v. 연기하다, ~을 뒤로 미루다 / n. 연기, 지연"],
+["disruption", "n. 중단, 혼란"],
+["expect", "v. 예상하다, 기대하다"],
+["expire", "v. 만기가 되다"],
+["generous", "a. 너그러운, 관대한"],
+["negative", "a. 부정적인"],
+["fix", "v. 수리하다, 고치다"],
+["guarantee", "v. 보장하다 / n. 보증, 보증서"],
+["odd", "a. 이상한, 별난"],
+["ordinary", "a. 보통의, 평범한"],
+["indicator", "n. 지표, 지수"],
+["innovative", "a. 혁신적인, 획기적인"],
+["inquire", "v. 질문하다"],
+["passive", "a. 소극적인"],
+["polite", "a. 공손한, 예의바른"],
+["mining", "n. 채굴, 채광"],
+["rude", "a. 무례한"],
+["order", "v. 주문하다 / n. 주문, 주문품"],
+["sincere", "a. 진실한, 진심 어린"],
+["praise", "v. 칭찬하다 / n. 칭찬"],
+["precisely", "ad. 정확히"],
+["strict", "a. 엄격한"],
+["temper", "n. 성질, 기질, 화"],
+["regular", "a. 정규적인, 정기적인 / n. 단골 손님"],
+["regulation", "n. 규정, 규칙"],
+["weird", "a. 기이한, 괴상한"],
+["solution", "n. 해결책"],
+["admire", "v. 감탄하다, 존경하다"],
+["structure", "n. 구조물 / v. 구성하다"],
+["summary", "n. 요약"],
+["amaze", "v. 놀라게 하다"],
+["appeal", "v. 마음에 들다 / n. 매력, 인기"],
+["calm", "a. 고요한, 침착한"],
+["cheerful", "a. 명랑한"],
+["undoubtedly", "ad. 의심할 여지 없이"],
+["comfortable", "a. 편안한"]
+];
+let mode = 'all';
+const checkedAll = new Set(); // 전체보기 모드 학습률
+const checkedHide = new Set(); // 뜻 가리기 모드 학습률
+function curSet() { return mode === 'hide' ? checkedHide : checkedAll; }
+function render() {
+const list = document.getElementById('list');
+list.innerHTML = words.map((w, i) => `
+<div class="card ${curSet().has(i) ? 'checked' : ''}" data-idx="${i}">
+<div class="num">${i + 1}</div>
+<div class="content">
+<div class="word">${w[0]}</div>
+<div class="meaning ${mode === 'hide' && !curSet().has(i) ? 'hidden' : ''}">${w[1]}</div>
+</div>
+</div>
+`).join('');
+document.querySelectorAll('.card').forEach(card => {
+card.addEventListener('click', () => {
+const idx = parseInt(card.dataset.idx);
+const set = curSet();
+const meaningEl = card.querySelector('.meaning');
+if (mode === 'hide') {
+if (!set.has(idx)) {
+set.add(idx);
+meaningEl.classList.remove('hidden');
+card.classList.add('checked');
+} else {
+set.delete(idx);
+meaningEl.classList.add('hidden');
+card.classList.remove('checked');
+}
+updateProgress();
+} else {
+if (set.has(idx)) set.delete(idx);
+else set.add(idx);
+card.classList.toggle('checked');
+updateProgress();
+}
+});
+});
+updateProgress();
+}
+function setMode(m) {
+mode = m;
+document.getElementById('modeAll').classList.toggle('active', m === 'all');
+document.getElementById('modeHide').classList.toggle('active', m === 'hide');
+render();
+}
+function resetChecks() { curSet().clear(); render(); }
+function updateProgress() {
+const label = mode === 'hide' ? '뜻 가리기 학습률' : '전체보기 학습률';
+document.getElementById('progress').textContent = `${label} ${curSet().size} / ${words.length}`;
+}
+render();
+</script>
+</body>
+</html>
