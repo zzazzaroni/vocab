@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>R4 12회 단어장</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif; background: #f4f6f9; color: #1a1a1a; min-height: 100vh; }
+.header { background: linear-gradient(135deg, #4a6fa5 0%, #2c4870 100%); color: white; padding: 20px 16px 16px; position: sticky; top: 0; z-index: 10; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+.header h1 { font-size: 22px; font-weight: 700; margin-bottom: 8px; }
+.header .subtitle { font-size: 13px; opacity: 0.9; }
+.controls { display: flex; gap: 8px; margin-top: 12px; }
+.btn { flex: 1; padding: 10px; background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); color: white; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+.btn:active { background: rgba(255,255,255,0.3); }
+.btn.active { background: white; color: #2c4870; }
+.progress { margin-top: 10px; font-size: 12px; opacity: 0.85; }
+.list { padding: 12px; }
+.card { background: white; border-radius: 12px; padding: 14px 16px; margin-bottom: 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); display: flex; align-items: center; cursor: pointer; transition: all 0.2s; user-select: none; -webkit-user-select: none; }
+.card:active { transform: scale(0.98); background: #f9fafb; }
+.card.checked { background: #f0f4f8; opacity: 0.7; }
+.num { flex-shrink: 0; width: 32px; height: 32px; background: #4a6fa5; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; margin-right: 14px; }
+.card.checked .num { background: #98a8b8; }
+.content { flex: 1; min-width: 0; }
+.word { font-size: 17px; font-weight: 700; color: #1a1a1a; margin-bottom: 3px; word-break: break-word; }
+.meaning { font-size: 14px; color: #5a6b7c; line-height: 1.4; word-break: keep-all; transition: opacity 0.2s; }
+.meaning.hidden { opacity: 0; }
+.back-link { display: block; text-align: center; padding: 16px; color: #4a6fa5; text-decoration: none; font-size: 14px; }
+.footer { text-align: center; padding: 10px 16px 30px; color: #98a8b8; font-size: 12px; }
+@media (min-width: 600px) { .list { max-width: 600px; margin: 0 auto; } }
+</style>
+</head>
+<body>
+<div class="header">
+<h1>📘 R4 12회 단어장</h1>
+<div class="subtitle">총 50단어 · 탭하면 체크 / 뜻 가리기 모드에서 탭하면 뜻 보기</div>
+<div class="controls">
+<button class="btn active" id="modeAll" onclick="setMode('all')">전체보기</button>
+<button class="btn" id="modeHide" onclick="setMode('hide')">뜻 가리기</button>
+<button class="btn" onclick="resetChecks()">체크 초기화</button>
+</div>
+<div class="progress" id="progress">전체보기 학습률 0 / 50</div>
+</div>
+<div class="list" id="list"></div>
+<a href="index.html" class="back-link">← 단어장 목록으로</a>
+<div class="footer">R4 In Class 리딩 · 12회 · 50 words</div>
+<script>
+const words = [
+[
+"strikingly",
+"ad. 눈에 띄게, 현저하게"
+],
+[
+"puzzle",
+"v. 혼란시키다, 곤란하게 만들다"
+],
+[
+"decade",
+"n. 10년"
+],
+[
+"literally",
+"ad. 말 그대로"
+],
+[
+"booking",
+"n. 예약"
+],
+[
+"particle",
+"n. 입자, 조각"
+],
+[
+"enormous",
+"a. 엄청난"
+],
+[
+"portion",
+"n. 1인분의 양"
+],
+[
+"solid",
+"a. 단색의"
+],
+[
+"universal",
+"a. 보편적인"
+],
+[
+"interpret",
+"v. 해석하다"
+],
+[
+"flavor",
+"n. 풍미"
+],
+[
+"utilize",
+"v. 활용하다"
+],
+[
+"weaver",
+"n. 직조공"
+],
+[
+"exist",
+"v. 존재하다"
+],
+[
+"preserve",
+"v. 보존하다"
+],
+[
+"fossil",
+"n. 화석"
+],
+[
+"confidence",
+"n. 자신감, 자부심"
+],
+[
+"be linked to",
+"phr. ~와 연관되다"
+],
+[
+"diverse",
+"a. 다양한"
+],
+[
+"beggar",
+"n. 걸인, 거지"
+],
+[
+"bother",
+"v. 방해하다, 신경 쓰이게 하다"
+],
+[
+"request",
+"n. 요구"
+],
+[
+"profound",
+"a. 심오한"
+],
+[
+"slightly",
+"ad. 약간"
+],
+[
+"grateful",
+"a. 감사하는"
+],
+[
+"glare at",
+"phr. ~을 노려보다[쏘아보다]"
+],
+[
+"grip",
+"v. 꽉 쥐다"
+],
+[
+"sibling",
+"n. 형제자매"
+],
+[
+"neglect",
+"v. 소홀히 하다, 간과하다"
+],
+[
+"exception",
+"n. 예외"
+],
+[
+"witness",
+"v. 목격하다"
+],
+[
+"commonplace",
+"a. 흔한"
+],
+[
+"reference",
+"n. 언급"
+],
+[
+"preoccupied",
+"a. 사로잡힌"
+],
+[
+"fraction",
+"n. 분수"
+],
+[
+"resident",
+"n. 거주자"
+],
+[
+"welfare",
+"n. 복지"
+],
+[
+"disturbingly",
+"ad. 충격적으로"
+],
+[
+"wired",
+"a. 고정된"
+],
+[
+"substantial",
+"a. 상당한"
+],
+[
+"reinforce",
+"v. 강화하다"
+],
+[
+"passively",
+"ad. 수동적으로"
+],
+[
+"consistent",
+"a. 일관성 있는"
+],
+[
+"confirmation",
+"n. 확인"
+],
+[
+"entertain",
+"v. 마음에 품다"
+],
+[
+"contradict",
+"v. 모순되다"
+],
+[
+"meditate",
+"v. 명상하다"
+],
+[
+"dull",
+"a. 둔한"
+],
+[
+"effectiveness",
+"n. 효율성"
+]
+];
+let mode = 'all';
+const checkedAll = new Set(); // 전체보기 모드 학습률
+const checkedHide = new Set(); // 뜻 가리기 모드 학습률
+function curSet() { return mode === 'hide' ? checkedHide : checkedAll; }
+function render() {
+const list = document.getElementById('list');
+list.innerHTML = words.map((w, i) => `
+<div class="card ${curSet().has(i) ? 'checked' : ''}" data-idx="${i}">
+<div class="num">${i + 1}</div>
+<div class="content">
+<div class="word">${w[0]}</div>
+<div class="meaning ${mode === 'hide' && !curSet().has(i) ? 'hidden' : ''}">${w[1]}</div>
+</div>
+</div>
+`).join('');
+document.querySelectorAll('.card').forEach(card => {
+card.addEventListener('click', () => {
+const idx = parseInt(card.dataset.idx);
+const set = curSet();
+const meaningEl = card.querySelector('.meaning');
+if (mode === 'hide') {
+if (!set.has(idx)) {
+set.add(idx);
+meaningEl.classList.remove('hidden');
+card.classList.add('checked');
+} else {
+set.delete(idx);
+meaningEl.classList.add('hidden');
+card.classList.remove('checked');
+}
+updateProgress();
+} else {
+if (set.has(idx)) set.delete(idx);
+else set.add(idx);
+card.classList.toggle('checked');
+updateProgress();
+}
+});
+});
+updateProgress();
+}
+function setMode(m) {
+mode = m;
+document.getElementById('modeAll').classList.toggle('active', m === 'all');
+document.getElementById('modeHide').classList.toggle('active', m === 'hide');
+render();
+}
+function resetChecks() { curSet().clear(); render(); }
+function updateProgress() {
+const label = mode === 'hide' ? '뜻 가리기 학습률' : '전체보기 학습률';
+document.getElementById('progress').textContent = `${label} ${curSet().size} / ${words.length}`;
+}
+render();
+</script>
+</body>
+</html>
